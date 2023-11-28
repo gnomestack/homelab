@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+CWD=$(dirname "$0")
+CWD=$(dirname "$CWD")
+deno run -A --unstable "$CWD/src/scripts/deno/cli.ts" "$@"
