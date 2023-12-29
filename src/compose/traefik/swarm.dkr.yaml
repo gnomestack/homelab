@@ -1,0 +1,5 @@
+hosts:
+  - "${VM_INGRESS_USER}@${VM_INGRESS_IP}"
+volumes:
+  traefik_acme: "${DOCKER_DIR}/var/lib/traefik/acme"
+  traefik_logs: "${DOCKER_DIR}/var/log/traefik"

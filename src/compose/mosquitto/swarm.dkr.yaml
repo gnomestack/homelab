@@ -1,0 +1,14 @@
+hosts:
+  - "${VM_DATA_USER}@${VM_DATA_IP}"
+volumes:
+  mosquitto_data: "${DOCKER_DIR}/var/lib/mosquitto"
+  mosquitto_etc: "${DOCKER_DIR}/etc/mosquitto"
+  mosquitto_log: "${DOCKER_DIR}/var/log/mosquitto"
+files:
+  - ./etc/mosquitto.conf:${DOCKER_DIR}/etc/mosquitto/mosquitto.conf
+cmds:
+ - run: |
+    echo "${MQTT_USER}" | sudo tee "/tmp/passwords.txt"
+    scp /tmp/passwords.txt ${VM_DATA_USER}@${VM_DATA_IP}:/opt/docker/etc/mosquitto/passwd.txt
+    sudo rm /tmp/passwords.txt
+   shell: bash

@@ -1,22 +1,22 @@
 services:
-  node:
+  app:
     image: lissy93/dashy:latest
     hostname: dashy
     restart: always
     environment:
       NODE_ENV: production
       TZ: UTC
+      UID: 1000
+      GID: 1000
     expose:
       - 80
-    ports:
-      - 3773:80
     deploy:
       mode: global
       restart_policy:
         condition: any
       placement:
         constraints:
-          - node.hostname == ${VM_APP1_NAME?VM_APP1_NAME not set}
+          - node.hostname == ${VM_APPS1_NAME?VM_APPS1_NAME not set}
       labels:
         # traefik.enable is required because we don't expose all containers automatically
         - traefik.enable=true
@@ -32,14 +32,10 @@ services:
       retries: 3
       start_period: 40s
     volumes:
-      - dashy-public:/app/public
+      - "${DASHY_PUBLIC}/conf.yml:/app/public/conf.yml"
     networks:
-      vnet-frontend:
-        ipv4_address: 172.19.0.50
+      - vnet_frontend
 
 networks:
-  vnet-frontend:
+  vnet_frontend:
     external: true
-
-volumes:
-  dashy-public:

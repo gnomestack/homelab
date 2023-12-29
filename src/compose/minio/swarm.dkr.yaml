@@ -1,0 +1,4 @@
+hosts:
+  - "${VM_MINIO_USER}@${VM_MINIO_IP}"
+volumes:
+  minio_data: "${DOCKER_DIR}/var/lib/minio"

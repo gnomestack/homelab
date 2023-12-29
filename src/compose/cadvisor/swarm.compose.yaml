@@ -1,0 +1,16 @@
+services:
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    network_mode: "host"
+    ports:
+      - "8080:8080"
+    volumes: 
+      - "/:/rootfs"
+      - "/var/run:/var/run"
+      - "/sys:/sys"
+      - "/var/lib/docker/:/var/lib/docker"
+      - "/dev/disk/:/dev/disk"
+    privileged: true
+    devices: 
+      - "/dev/kmsg"

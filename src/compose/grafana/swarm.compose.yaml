@@ -1,0 +1,16 @@
+services:
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: always
+    networks:
+      - localnet
+    depends_on:
+      - influxdb
+    environment:
+      - GF_SECURITY_ADMIN_USER=grafana_user
+      - GF_SECURITY_ADMIN_PASSWORD=ChangeME
+    ports:
+      - 8125:3000
+    volumes:
+      - /c/local-docker/home-assistant/grafana:/var/lib/grafana

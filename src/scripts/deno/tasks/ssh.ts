@@ -12,3 +12,9 @@ export async function sshFile(target: string, file: string, options?: IExecOptio
     r.throwOrContinue();
     return r;
 }
+
+export async function scp(target: string, src: string, dest: string, options?: IExecOptions) {
+    const r = await ps.exec("scp", ["-o", "StrictHostKeyChecking=no", src, `${target}:${dest}`], options);
+    r.throwOrContinue();
+    return r;
+}

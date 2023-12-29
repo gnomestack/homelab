@@ -1,0 +1,5 @@
+hosts:
+  - "${VM_DATA_USER}@${VM_DATA_IP}"
+volumes:
+  redis_data: "${DOCKER_DIR}/var/lib/redis"
+  redis_etc: "${DOCKER_DIR}/etc/redis"

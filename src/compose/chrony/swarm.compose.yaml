@@ -1,0 +1,13 @@
+# TODO: convert
+
+services: 
+  chrony:
+    container_name: chrony
+    image: cturra/ntp
+    restart: always
+    networks:
+      - localnet
+    environment:
+      - NTP_SERVERS=time.windows.com,time.cloudflare.com
+    ports:
+      - 123:123

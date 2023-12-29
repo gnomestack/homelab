@@ -1,0 +1,48 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    hostname: mqtt
+    expose:
+      - 1883
+      - 9001
+    environment:
+      TZ: ${TZ:-Universal}
+    volumes:
+      - ${MOSQUITTO_ETC}:/mosquitto/config
+      - ${MOSQUITTO_DATA}:/mosquitto/data
+      - ${MOSQUITTO_LOG}:/mosquitto/log
+    stdin_open: true
+    tty: true
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_DATA_NAME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.services.mqtt.loadbalancer.server.port=1883"
+      - "traefik.tcp.services.mqtt_websocket.loadbalancer.server.port=9001"
+      - "traefik.tcp.routers.tcpr_mqtt.entrypoints=mqtt"
+      - "traefik.tcp.routers.tcpr_mqtt.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.tcpr_mqtt.service=mqtt"
+      - "traefik.tcp.routers.tcpr_mqtt_websocket.entrypoints=websocket"
+      - "traefik.tcp.routers.tcpr_mqtt_websocket.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.tcpr_mqtt_websocket.service=mqtt_websocket"
+    networks:
+      - vnet_frontend
+      - vnet_backend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

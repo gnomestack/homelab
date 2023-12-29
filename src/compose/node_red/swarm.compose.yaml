@@ -1,0 +1,17 @@
+# TODO: convert
+
+services:
+  node-red:
+    image: "${IMAGE:-nodered/node-red:latest}"
+    container_name: "${NAME:-node-red}"
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Universal}
+      PUID: ${PUID:-0}
+      GUID: ${GUID:-0}
+    ports:
+      - "80:1880"
+    networks:
+      - node-red-net
+    volumes:
+      - node-red-data:/data

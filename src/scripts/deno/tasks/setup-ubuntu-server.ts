@@ -194,17 +194,21 @@ if [ ! -d "/home/$USER/.local/bin" ]; then
     mkdir -p "/home/$USER/.local/bin"
 fi
 
-DOCKER_DIR="/home/$USER/opt/docker"
+DOCKER_DIR="/opt/docker"
 
 if [ ! -d "$DOCKER_DIR" ]; then
-    mkdir -p "$DOCKER_DIR"
+    sudo mkdir -p "$DOCKER_DIR"
+    sudo chown "\${USER}:docker" -R "$DOCKER_DIR"
+
+
     mkdir -p "$DOCKER_DIR/var/lib"
     mkdir -p "$DOCKER_DIR/var/run"
     mkdir -p "$DOCKER_DIR/var/log"
+    mkdir -p "$DOCKER_DIR/var/tmp"
     mkdir -p "$DOCKER_DIR/etc"
     mkdir -p "$DOCKER_DIR/bin"
 
-    sudo chown -R "$USER:$USER" "$DOCKER_DIR"
+    sudo chown -R "$USER:docker" "$DOCKER_DIR"
 fi
 `;
 

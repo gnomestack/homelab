@@ -1,0 +1,46 @@
+services:
+  app:
+    image: vaultwarden/server:latest
+    #container_name: ${NAME:-vault-warden}
+    #restart: unless-stopped
+    hostname: vault_warden
+    environment:
+      TZ: UTC
+      DOMAIN: "https://vw.${TLD?TLD not set}"
+      WEBSOCKET_ENABLED: ${VW_WEBSOCKET_ENABLED:-true}
+      WEB_VAULT_ENABLED: ${VW_WEB_VAULT_ENABLED:-true}
+      SIGNUPS_ALLOWED: ${VW_SIGNUPS_ALLOWED:-false}
+      ADMIN_TOKEN: ${VW_ADMIN_TOKEN:-CHANGEm3!}
+      DATABASE_URL: "postgresql://${VW_PG_USER}:${VW_PG_SECRET}@postgres_01:${PG_PORT:-5432}/${VW_PG_DB?Requires VW_PG_DB}"
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_APPS1_NAME?VM_APPS1_NAME not set}
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.vault_warden.rule=Host(`vw.${TLD?TLD not set}`)
+        - traefik.http.routers.vault_warden.entrypoints=https
+        - traefik.http.routers.vault_warden.tls=true
+        - traefik.http.routers.vault_warden.tls.certresolver=le
+        - traefik.http.routers.vault_warden.service=vault_warden
+        - traefik.http.services.vault_warden.loadbalancer.server.port=80
+
+        # Watchtower Update
+        - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - ${VW_DATA}:/data:rw
+    networks:
+      - vnet_frontend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend

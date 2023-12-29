@@ -1,0 +1,40 @@
+services:
+  app:
+    image: gotify/server
+    hostname: gotify
+    #container_name: ${NAME:-gotify}
+    #restart: unless-stopped
+    environment:
+      GOTIFY_DEFAULTUSER_PASS: "${GOTIFY_USER_SECRET:-CHANGEm3}"
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_INFRA_NAME}
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.gotify.rule=Host(`gotify.${TLD?TLD not set}`)
+        - traefik.http.routers.gotify.entrypoints=https
+        - traefik.http.routers.gotify.tls=true
+        - traefik.http.routers.gotify.tls.certresolver=le
+        - traefik.http.routers.gotify.service=gotify
+        - traefik.http.services.gotify.loadbalancer.server.port=80
+
+        # Watchtower Update
+        - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - "${GOTIFY_DATA}:/app/data"
+
+    networks:
+      - vnet_frontend
+
+networks:
+  vnet_frontend:
+    external: true

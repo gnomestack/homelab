@@ -1,0 +1,37 @@
+services:
+  node_01:
+    image: louislam/uptime-kuma:1
+    hostname: uptime_kuma
+    environment:
+      TZ: "${TZ:-Universal}"
+
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_INFRA_NAME}
+
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.uptime_kuma.rule=Host(`kuma.${TLD?TLD not set}`)
+        - traefik.http.routers.uptime_kuma.entrypoints=https
+        - traefik.http.routers.uptime_kuma.tls.certresolver=le
+        - traefik.http.routers.uptime_kuma.tls=true
+        - traefik.http.services.uptime_kuma.loadBalancer.server.port=3001
+    volumes:
+      - "${UPTIME_KUMA_DATA}:/app/data"
+
+    networks:
+      - vnet_frontend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend

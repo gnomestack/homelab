@@ -5,8 +5,9 @@ WD=$(realpath "$WD")
 PATH="$PATH:${WD}/bin"
 echo "export PATH=\"$PATH\"" > ./path.env
 
-if ! grep -q "## DRK" ~/.bashrc; then
-  echo "## DRK" | tee -a ~/.bashrc
+if ! grep -q "## DRK" ~/.bash_env; then
+  echo "" | tee -a ~./.bash_env
+  echo "## DRK" | tee -a ~/.bash_env
   echo "export PATH=\"\$PATH:\${WD}/bin\"" | tee -a ~/.bashrc
 fi
 

@@ -10,7 +10,7 @@ export async function setupDockerSwarmNetworks(target: string) {
 
     if (ingressInfo.IPAM.Config.Subnet !== "172.30.0.0/16")
     {
-        const cmd = `docker network rm ingress --force`;
+        const cmd = `yes y | docker network rm ingress --force`;
         await sshScript(target, cmd);
         const cmd2 = "docker network create -d overlay --ingress " + 
             "--subnet=172.30.0.0/16 --gateway=172.30.0.1 "+
@@ -28,13 +28,13 @@ export async function setupDockerSwarmNetworks(target: string) {
 
     if (!availableNetworks.includes("vnet-frontend"))
     {
-        const cmd4 = "docker network create -d overlay --subnet 172.19.0.0/16 --gateway 172.19.0.1 --attachable vnet-frontend"
+        const cmd4 = "docker network create -d overlay --subnet 172.19.0.0/16 --gateway 172.19.0.1 --attachable vnet_frontend"
         await sshScript(target, cmd4);
     }
 
     if (!availableNetworks.includes("vnet-backend"))
     {
-        const cmd5 = "docker network create -d overlay --subnet 172.20.0.0/16 --gateway 172.20.0.1 --attachable vnet-backend"
+        const cmd5 = "docker network create -d overlay --subnet 172.20.0.0/16 --gateway 172.20.0.1 --attachable vnet_backend"
         await sshScript(target, cmd5);
     }
 }

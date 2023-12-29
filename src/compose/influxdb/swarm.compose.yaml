@@ -1,0 +1,52 @@
+services:
+  node_01:
+    container_name: influxdb
+    hostname: influxdb_01
+    image: influxdb:2.7
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - INFLUXDB_DB=${INFLUXDB_DB:-default_db}
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USER:-influx_admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_SECRET:-CHANGEm3!}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-default_org}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-default_bucket}
+      - INFLUXDB_HTTP_BIND_ADDRESS=${INFLUXDB_PORT:-:8086}
+      - INFLUXDB_HTTP_ENABLED=true
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+    ports:
+      - "${INFLUXDB_PORT:-8086}:8086"
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_DATA_NAME}
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.influxdb_01.rule=Host(`influxdb.${TLD?Requires TLD}`)
+        - traefik.http.routers.influxdb_01.entryPoints=https
+        - traefik.http.routers.influxdb_01.service=influxdb_01
+        - traefik.http.routers.influxdb_01.tls=true
+        - traefik.http.routers.influxdb_01.tls.certResolver=le
+        # services (needed for TCP)
+        - traefik.http.services.influxdb_01.loadbalancer.server.port=${INFLUXDB_PORT:-8086}
+    volumes:
+      - ${INFLUXDB_DATA}:/var/lib/influxdb2
+
+    networks:
+      - vnet_frontend
+      - vnet_backend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

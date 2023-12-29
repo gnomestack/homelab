@@ -1,0 +1,12 @@
+# TODO
+services:
+  tasmo_admin:
+    container_name: tasmoadmin
+    image: ghcr.io/tasmoadmin/tasmoadmin:v1.8.0
+    restart: always
+    networks:
+      - localnet
+    ports:
+      - 8124:80
+    volumes:
+      - /c/local-docker/home-assistant/tasmoadmin:/data/tasmoadmin

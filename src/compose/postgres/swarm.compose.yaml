@@ -1,0 +1,47 @@
+services:
+  node_01:
+    image: postgres:14
+    #container_name: ${NAME:-postgres}5a
+    hostname: postgres_01
+    environment:
+      TZ: UTC
+      POSTGRES_USER: "${PG_USER?Requires PG_USER}"
+      POSTGRES_PASSWORD: "${PG_SECRET?Requires PG_SECRET}"
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_DATA_NAME}
+      labels:
+        # need to wait for traefik 3 for SNI support for postgres
+        - "traefik.enable=true"
+        # routers
+        - "traefik.tcp.routers.postgres_01.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.postgres_01.entryPoints=postgres"
+        - "traefik.tcp.routers.postgres_01.service=postgres"
+        # services (needed for TCP)
+        - "traefik.tcp.services.postgres_01.loadbalancer.server.port=${PG_PORT:-5432}"
+    ports:
+      - ${PG_PORT:-5432}:5432
+    volumes:
+      - "${PG_DATA}:/var/lib/postgresql/data"
+      - "${PG_RUN}:/docker-entrypoint-initdb.d"
+
+    networks:
+      - vnet_frontend
+      - vnet_backend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

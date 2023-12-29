@@ -1,0 +1,23 @@
+hosts:
+  - "${VM_APPS1_USER}@${VM_APPS1_IP}"
+volumes:
+  vw_data: "${DOCKER_DIR}/var/lib/vault_warden"
+cmds:
+ - run: |
+    echo "${VW_PG_USER?VW_PG_USER not set}"
+    echo "${VW_PG_DB?VW_PG_DB not set}"
+    export PGPASSWORD="${PG_SECRET}"
+    psql -h "${VM_INGRESS_IP}" -U "${PG_USER}" -tc "SELECT 1 FROM pg_database WHERE datname = '${VW_PG_DB}'"
+    DB_EXISTS=$(psql -h "${VM_DATA_IP}" -U "${PG_USER}" -tc "SELECT 1 FROM pg_database WHERE datname = '${VW_PG_DB}'")
+    echo "$DB_EXISTS"
+    if [ $(echo "$DB_EXISTS" | grep -ic "1") -eq 1 ]
+    then
+      echo "db ${VW_PG_DB} exists"
+    else 
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "CREATE DATABASE ${VW_PG_DB}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "CREATE USER ${VW_PG_USER} WITH ENCRYPTED PASSWORD '${VW_PG_SECRET}'"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "GRANT ALL ON DATABASE ${VW_PG_DB} TO ${VW_PG_USER}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "GRANT all privileges ON database ${VW_PG_DB} TO ${VW_PG_USER}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -d "${VW_PG_DB}" -c "GRANT ALL ON SCHEMA public TO ${VW_PG_USER}"
+    fi
+   shell: bash

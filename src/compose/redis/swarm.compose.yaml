@@ -1,0 +1,49 @@
+services:
+  node_01:
+    image: redis:7
+    hostname: redis_01
+    restart: unless-stopped
+    environment:
+      TZ: UTC
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command:
+      - redis-server
+      - --save 20 1
+      - --loglevel warning
+      - --requirepass
+      - ${REDIS_SECRET:-CHANGEm3!}
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_DATA_NAME}
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.tcp.routers.redis.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.redis.entryPoints=redis"
+        - "traefik.tcp.routers.redis.service=redis"
+        # services (needed for TCP)
+        - "traefik.tcp.services.redis.loadbalancer.server.port=${REDIS_PORT:-6379}"
+    volumes:
+      - "${REDIS_DATA}:/data"
+      - "${REDIS_ETC}:/usr/local/etc/redis"
+    networks:
+      - vnet_frontend
+      - vnet_backend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

@@ -1,0 +1,7 @@
+hosts:
+  - "${VM_DATA_USER}@${VM_DATA_IP}"
+volumes:
+  pg_data: "${DOCKER_DIR}/var/lib/postgres"
+  pg_run: "${DOCKER_DIR}/var/run/postgres"
+files:
+  - ./run/init-db.sh:${DOCKER_DIR}/var/run/postgres/init-db.sh

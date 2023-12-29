@@ -1,7 +1,7 @@
 
 import { hostWriter, IPsStartInfo, preCallHooks, WriteLevel } from "./deps.ts";
 import { Command, HelpCommand, CompletionsCommand } from "./deps.ts";
-import { swarmCommand, envCommand, cfCommand } from "./cmds/core.ts";
+import { swarmCommand, envCommand, cfCommand, vmCommand } from "./cmds/core.ts";
 
 preCallHooks.push((si: IPsStartInfo) => {
     hostWriter.command(si.file.toString(), si.args || []);
@@ -29,6 +29,7 @@ cmd
     .command("swarm", swarmCommand)
     .command("cloudflare", cfCommand)
     .command("env", envCommand)
+    .command("vm", vmCommand)
     .command("completions", new CompletionsCommand())
     .hidden()
     .command("help", new HelpCommand().global())

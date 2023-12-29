@@ -1,0 +1,6 @@
+hosts:
+  - "${VM_APPS1_USER}@${VM_APPS1_IP}"
+volumes:
+  dashy_public: "${DOCKER_DIR}/etc/dashy"
+files:
+  - ./etc/conf.yml:${DOCKER_DIR}/etc/dashy/conf.yml

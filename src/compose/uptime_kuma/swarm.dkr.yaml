@@ -1,0 +1,4 @@
+hosts:
+  - "${VM_INFRA_USER}@${VM_INFRA_IP}"
+volumes:
+  uptime_kuma_DATA: "${DOCKER_DIR}/var/lib/uptime_kuma"

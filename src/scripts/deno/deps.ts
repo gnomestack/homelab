@@ -10,3 +10,6 @@ export * from "https://deno.land/x/quasar@0.0.8/fmt/host_writer.ts";
 export { preCallHooks } from "https://deno.land/x/quasar@0.0.8/process/mod.ts";
 export type { IPsStartInfo } from "https://deno.land/x/quasar@0.0.8/process/mod.ts";
 export * from "https://deno.land/x/quasar@0.0.8/ci/_init_host_writer.ts";
+export * from "https://deno.land/x/quasar@0.0.8/shell/script_runner/mod.ts";
+import {} from "https://deno.land/x/quasar@0.0.8/shell/bash/register_script_runner.ts";
+import {} from "https://deno.land/x/quasar@0.0.8/shell/pwsh/register_script_runner.ts";

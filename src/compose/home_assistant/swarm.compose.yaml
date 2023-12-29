@@ -1,0 +1,40 @@
+# TODO: convert
+services:
+  app:
+    hostname: hass
+    image: homeassistant/home-assistant:stable
+    #restart: unless-stopped
+    privileged: true
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_APPS1_NAME}
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.hass.rule=Host(`ha.${TLD?TLD not set}`)
+        - traefik.http.routers.hass.entrypoints=https
+        - traefik.http.routers.hass.tls=true
+        - traefik.http.routers.hass.tls.certresolver=le
+        - traefik.http.routers.hass.service=hass
+        - traefik.http.services.hass.loadbalancer.server.port=8123
+        - traefik.http.services.hass.loadbalancer.passhostheader=true
+
+        # Watchtower Update
+        - com.centurylinklabs.watchtower.enable=true
+    volumes:
+      - ${HASS_ETC}:/config
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - vnet_frontend
+
+networks:
+  vnet_frontend:
+    external: true

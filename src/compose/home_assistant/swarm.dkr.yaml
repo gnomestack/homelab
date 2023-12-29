@@ -1,0 +1,23 @@
+hosts:
+  - "${VM_APPS1_USER}@${VM_APPS1_IP}"
+volumes:
+  hass_etc: "${DOCKER_DIR}/etc/hass"
+cmds:
+ - run: |
+    echo "${HASS_PG_USER?HASS_PG_USER not set}"
+    echo "${HASS_PG_DB?HASS_PG_DB not set}"
+    export PGPASSWORD="${PG_SECRET}"
+    psql -h "${VM_INGRESS_IP}" -U "${PG_USER}" -tc "SELECT 1 FROM pg_database WHERE datname = '${HASS_PG_DB}'"
+    DB_EXISTS=$(psql -h "${VM_DATA_IP}" -U "${PG_USER}" -tc "SELECT 1 FROM pg_database WHERE datname = '${HASS_PG_DB}'")
+    echo "$DB_EXISTS"
+    if [ $(echo "$DB_EXISTS" | grep -ic "1") -eq 1 ]
+    then
+      echo "db ${HASS_PG_DB} exists"
+    else 
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "CREATE DATABASE ${HASS_PG_DB}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "CREATE USER ${HASS_PG_USER} WITH ENCRYPTED PASSWORD '${HASS_PG_SECRET}'"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "GRANT ALL ON DATABASE ${HASS_PG_DB} TO ${HASS_PG_USER}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -c "GRANT all privileges ON database ${HASS_PG_DB} TO ${HASS_PG_USER}"
+      psql -U "$PG_USER" -h "${VM_INGRESS_IP}" -d "${HASS_PG_DB}" -c "GRANT ALL ON SCHEMA public TO ${HASS_PG_USER}"
+    fi
+   shell: bash

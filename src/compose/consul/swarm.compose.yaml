@@ -2,10 +2,10 @@ services:
   node_01:
     image: hashicorp/consul
     #container_name: consul-01
-    hostname: consul-01
+    hostname: consul_01
     environment:
-      - CONSUL_LOCAL_CONFIG={"server":true, "advertise_addr":"${VM_MGMT_IP?VM_MGMT_IP is not set}" }
-      #- CONSUL_BIND_INTERFACE=eth0
+      - CONSUL_LOCAL_CONFIG={"server":true, "advertise_addr":"${VM_INFRA_IP?VM_INFRA_IP is not set}" }
+      # - CONSUL_BIND_INTERFACE=eth0
       #- CONSUL_CLIENT_INTERFACE=eth0
     expose:
       - 8300
@@ -14,46 +14,42 @@ services:
       # 8500:8500
       - 8600:8600/udp
       - 8600:8600/tcp
-      # 8300:8300
-    command: agent -server -ui -bootstrap-expect=1 -client=0.0.0.0 -retry-interval 5s -disable-host-node-id
+      - 8300:8300
+    command: agent -server -ui -data-dir=/consul/data -bootstrap-expect=1 -client=0.0.0.0 -retry-interval 5s -disable-host-node-id
     deploy:
-      resources:
-        reservations:
-          memory: 128M
       restart_policy:
         condition: any
         delay: 5s
         window: 120s
+      resources:
+        reservations:
+          memory: 256M
       update_config:
-            parallelism: 1
-            delay: 10s
-            failure_action: continue
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
       placement:
         constraints:
-          - node.hostname == vm-mgmt
+          - node.hostname == ${VM_INFRA_NAME}
       labels:
         # traefik.enable is required because we don't expose all containers automatically
         - traefik.enable=true
-        - traefik.http.routers.consul.entrypoints=https
-        - traefik.http.routers.consul.rule=Host(`consul.${TLD?TLD not set}`)
-        - traefik.http.routers.consul.tls=true
-        - traefik.http.routers.consul.tls.certresolver=le
+        - traefik.http.routers.consul_01.entrypoints=https
+        - traefik.http.routers.consul_01.rule=Host(`consul.${TLD?TLD not set}`)
+        - traefik.http.routers.consul_01.tls=true
+        - traefik.http.routers.consul_01.tls.certresolver=le
         - traefik.frontend.auth.forward.authResponseHeaders=X-Forwarded-User
         - traefik.frontend.auth.forward.trustForwardHeader=true
-        - traefik.http.services.consul.loadbalancer.server.port=8500
+        - traefik.http.services.consul_01.loadbalancer.server.port=8500
     volumes:
-      - consul-data:/consul/data
+      - "${CONSUL_DATA}:/consul/data"
     networks:
-      vnet-frontend:
-        ipv4_address: 172.19.0.3
+      - vnet_frontend
 
 networks:
-  vnet-frontend:
+  vnet_frontend:
     external: true
-    name: vnet-frontend
-  vnet-backend:
+    name: vnet_frontend
+  vnet_backend:
     external: true
-    name: vnet-backend
-
-volumes:
-  consul-data:
+    name: vnet_backend

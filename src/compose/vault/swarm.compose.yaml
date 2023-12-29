@@ -1,16 +1,17 @@
 services:
   node_01:
     image: hashicorp/vault
-    hostname: vault-01
+    hostname: vault_01
     restart: always
+    
     environment:
-      VAULT_ADDR: "http://${VM_MGMT_IP}:8200"
-      VAULT_API_ADDR: "http://${VM_MGMT_IP}:8200"
+      VAULT_ADDR: "http://${VM_INFRA_IP}:8200"
+      VAULT_API_ADDR: "http://${VM_INFRA_IP}:8200"
       VAULT_LOCAL_CONFIG: |
           {
             "backend": {
               "consul": {
-                "address": "consul-01:8500",
+                "address": "consul_01:8500",
                 "path": "vault/"
               }
             },
@@ -31,9 +32,10 @@ services:
     deploy:
       restart_policy:
         condition: any
+      
       placement:
         constraints:
-          - node.hostname == vm-mgmt
+          - node.hostname == ${VM_INFRA_NAME}
       labels:
         # traefik.enable is required because we don't expose all containers automatically
         - traefik.enable=true
@@ -44,19 +46,16 @@ services:
         - traefik.http.services.vault.loadbalancer.server.port=8200
     command: server
     volumes:
-      - vault-policies:/vault/policies
-      - vault-data:/vault/data
-      - vault-logs:/vault/logs
+      - ${VAULT_POLICIES}:/vault/policies
+      - ${VAULT_DATA}:/vault/data
+      - ${VAULT_LOGS}:/vault/logs
     networks:
-      vnet-frontend:
-        ipv4_address: 172.19.0.4
+      - vnet_frontend
 
 networks:
-  vnet-frontend:
+  vnet_frontend:
     external: true
-    name: vnet-frontend
-
-volumes:
-  vault-data:
-  vault-policies:
-  vault-logs:
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

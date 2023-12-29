@@ -1,0 +1,4 @@
+hosts:
+  - "${VM_DATA_USER}@${VM_DATA_IP}"
+volumes:
+  influxdb_data: "${DOCKER_DIR}/var/lib/influxdb"

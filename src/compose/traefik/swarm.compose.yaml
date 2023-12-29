@@ -21,7 +21,7 @@ services:
         delay: 10s
       placement:
         constraints:
-          - node.labels.vnet-frontend.traefik-certificates == true
+        #  - node.labels.vnet-frontend.traefik-certificates == true
           - node.role == manager
       labels:
         # traefik.enable is required because we don't expose all containers automatically
@@ -43,7 +43,7 @@ services:
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker=true"
       - "--providers.docker.exposedByDefault=false"
-      - "--providers.docker.network=vnet-frontend"
+      - "--providers.docker.network=vnet_frontend"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.swarmModeRefreshSeconds=5"
       - "--providers.docker.watch=true"
@@ -53,6 +53,14 @@ services:
       - "--entrypoints.postgres.address=:5432"
       - "--entrypoints.redis.address=:6379"
       - "--entrypoints.mssql.address=:1433"
+      - "--entrypoints.influxdb.address=:8086"
+      - "--entrypoints.mysql.address=:3306"
+      - "--entrypoints.time.address=:123"
+      - "--entrypoints.mongodb.address=:27017"
+      - "--entrypoints.mqtt.address=:1883"
+      - "--entrypoints.mqtt_websocket.address=:9001"
+      - "--entrypoints.rabbitmq.address=:5672"
+      - "--entrypoints.rabbitmq_management.address=:15672"
       #- "--providers.docker.constraints=Label(`traefik.constraint-label`, `vnet-frontend`)"
       - "--certificatesResolvers.le.acme.dnschallenge=true"
       - "--certificatesResolvers.le.acme.dnschallenge.provider=cloudflare"
@@ -87,22 +95,17 @@ services:
         mode: host
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - traefik-acme:/acme
-      - traefik-logs:/var/log/traefik
+      - "${TRAEFIK_ACME}:/acme"
+      - "${TRAEFIK_LOGS}:/var/log/traefik"
 
     networks:
-      vnet-frontend:
+      vnet_frontend:
         ipv4_address: 172.19.0.2
 
-
 networks:
-  vnet-frontend:
+  vnet_frontend:
     external: true
-    name: vnet-frontend
-  vnet-backend:
+    name: vnet_frontend
+  vnet_backend:
     external: true
-    name: vnet-backend
-
-volumes:
-  traefik-acme:
-  traefik-logs:
+    name: vnet_backend

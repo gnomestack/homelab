@@ -1,0 +1,78 @@
+services:
+  app:
+    image: nextcloud:latest
+    hostname: nextcloud
+    environment:
+      - POSTGRES_HOST=${VM_INGRESS_IP}
+      - POSTGRES_DB=${NEXTCLOUD_PG_DB:-nextcloud_prod}
+      - POSTGRES_USER=${NEXTCLOUD_PG_USER:-nextcloud_user}
+      - POSTGRES_PASSWORD=${NEXTCLOUD_PG_SECRET:-CHANGEm3!}
+      - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_SECRET:-CHANGEm3!}
+      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-nextcloud_admin}
+      #
+      # APACHE_DISABLE_REWRITE_IP=true
+      - "TRUSTED_PROXIES=nextcloud.${TLD?TLD not set} 172.19.0.0/16 172.30.0.0/16"
+      - OVERWRITECLIURL=https://nextcloud.${TLD?TLD not set}
+      - "NEXTCLOUD_TRUSTED_DOMAINS=nextcloud.${TLD?TLD not set} ${TLD?TLD not set}"
+      - OVERWRITEHOST=nextcloud.${TLD?TLD not set}
+      - OVERWRITEPROTOCOL=https
+      - NEXTCLOUD_DEFAULT_PHONE_REGION=US
+      - OBJECTSTORE_S3_AUTOCREATE=false
+      - OBJECTSTORE_S3_KEY=${NEXTCLOUD_S3_KEY?NEXTCLOUD_S3_KEY not set}
+      - OBJECTSTORE_S3_SECRET=${NEXTCLOUD_S3_SECRET?NEXTCLOUD_S3_KEY not set}
+      - OBJECTSTORE_S3_BUCKET=${NEXTCLOUD_S3_BUCKET:-nextcloud}
+      - OBJECTSTORE_S3_HOST=s3.${TLD?TLD not set}
+      - OBJECTSTORE_S3_USEPATH_STYLE=true
+      - OBJECTSTORE_S3_SSL=true
+      - OBJECTSTORE_S3_PORT=443
+      - REDIS_HOST=redis.${TLD?TLD not set}
+      - REDIS_HOST_PASSWORD=${REDIS_SECRET:-CHANGEm3!}
+      - REDIS_HOST_PORT=${REDIS_PORT:-6379}
+      #- SMTP_HOST=smtp.gmail.com
+      #- SMTP_PORT=465
+      #- SMTP_SECURE=STARTTLS
+      #- SMTP_AUTHTYPE=Login
+      #- SMTP_NAME=redacted@redacted.com
+      #- SMTP_PASSWORD=/run/secrets/smtp_password
+      #- MAIL_FROM_ADDRESS=nextcloud
+      #- MAIL_DOMAIN=redacted.com
+
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: continue
+      placement:
+        constraints:
+          - node.hostname == ${VM_APPS1_NAME}
+      labels:
+        - traefik.enable=true
+        - traefik.http.middlewares.nextcloud_compress.compress=true
+        - traefik.http.middlewares.nextcloud_redirect.redirectregex.permanent=true
+        - traefik.http.middlewares.nextcloud_redirect.redirectregex.regex=https://(.*)/.well-known/(?:card|cal)dav
+        - traefik.http.middlewares.nextcloud_redirect.redirectregex.replacement=https://$${1}/remote.php/dav
+        - traefik.http.routers.nextcloud.entrypoints=https
+        - traefik.http.routers.nextcloud.rule=Host(`nextcloud.${TLD?TLD not set}`)   
+        - traefik.http.routers.nextcloud.tls=true
+        - traefik.http.routers.nextcloud.tls.certresolver=le
+        - traefik.http.routers.nextcloud.service=nextcloud
+        - traefik.http.routers.nextcloud.middlewares=nextcloud_compress@docker,nextcloud_redirect@docker
+        - traefik.http.services.nextcloud.loadbalancer.server.port=80
+        - traefik.http.services.nextcloud.loadbalancer.passhostheader=true
+
+    volumes:
+      - ${NEXTCLOUD_SRV}:/var/www/html
+    networks:
+      - vnet_frontend
+
+networks:
+  vnet_frontend:
+    external: true
+    name: vnet_frontend
+  vnet_backend:
+    external: true
+    name: vnet_backend

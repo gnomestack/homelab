@@ -1,0 +1,6 @@
+hosts:
+  - "${VM_INFRA_USER}@${VM_INFRA_IP}"
+volumes:
+  vault_data: "${DOCKER_DIR}/var/lib/vault"
+  vault_logs: "${DOCKER_DIR}/var/log/vault"
+  vault_policies: "${DOCKER_DIR}/etc/vault/policies"
